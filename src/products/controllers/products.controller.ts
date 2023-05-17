@@ -26,14 +26,9 @@ export class ProductsController {
 
   @Get()
   @ApiOperation({ summary: 'List of products' })
-  getProducts(
-    @Query('limit') limit = 100,
-    @Query('offset') offset = 0,
-    @Query('brand') brand: string,
-  ) {
-    // return {
-    //   message: `products limit=> ${limit} offset=> ${offset} brand=> ${brand}`,
-    // };
+  getProducts(@Query('limit') limit = 100, @Query('offset') offset = 0) {
+    console.log(limit);
+    console.log(offset);
     return this.productsService.findAll();
   }
 
