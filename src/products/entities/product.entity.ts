@@ -17,6 +17,6 @@ export class Product {
   @Column({ type: 'int' })
   stock: number;
 
-  @Column({ type: 'string' })
+  @Column({ type: 'varchar' })
   image: string;
 }
