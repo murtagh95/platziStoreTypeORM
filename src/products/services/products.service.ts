@@ -1,31 +1,33 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository} from 'typeorm';
+import { Repository, In } from 'typeorm';
 
 import { Product } from '../entities/product.entity';
 import { CreateProductDto, UpdateProductDto } from '../dtos/products.dtos';
 import { BrandsService } from './brands.service';
+import { CategoriesService } from './categories.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product) private productRepo: Repository<Product>,
     private brandService: BrandsService,
+    private categoryService: CategoriesService,
   ) {}
 
   async findAll() {
     return await this.productRepo.find({
-      relations: ['brand'],
+      relations: ['brand', 'categories'],
     });
   }
 
   async findOne(id: number) {
     const product = await this.productRepo.findOne({
-      relations: ['brand'],
+      relations: ['brand', 'categories'],
       where: {
         id: id,
       },
@@ -44,11 +46,19 @@ export class ProductsService {
     // newProduct.price = data.price;
     // newProduct.stock = data.stock;
     const newProduct = this.productRepo.create(data);
-    if (data.brandId) {
-      newProduct.brand = await this.brandService.findOne(data.brandId);
-      return await this.productRepo.save(newProduct);
+    console.log('Create products');
+    if (!data.brandId || !data.categoriesId) {
+      throw new BadRequestException(
+        `The brandId and categoriesId fields are required`,
+      );
     }
-    throw new BadRequestException(`The brandId field is required`);
+    newProduct.brand = await this.brandService.findOne(data.brandId);
+    newProduct.categories = await this.categoryService.findAll({
+      where: {
+        id: In(data.categoriesId),
+      },
+    });
+    return await this.productRepo.save(newProduct);
   }
 
   async update(id: number, changes: UpdateProductDto) {
